@@ -1,39 +1,103 @@
-document.getElementById('matricesForm').addEventListener('submit', async function(event) {
-    event.preventDefault();
-    
-    const filas = parseInt(document.getElementById('filasMatriz').value);
-    const columnas = parseInt(document.getElementById('columnasMatriz').value);
+function crearInputsMatrix(id, rows, cols) {
+    let matrixDiv = document.getElementById(id);
+    matrixDiv.innerHTML = ''; // Limpiar el div antes de crear nuevos inputs
 
-    if (isNaN(filas) || isNaN(columnas)) {
-        alert('Por favor, ingrese valores válidos para filas y columnas.');
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            let input = document.createElement('input');
+            input.type = 'number';
+            input.setAttribute('data-row', i);
+            input.setAttribute('data-col', j);
+            matrixDiv.appendChild(input);
+        }
+        matrixDiv.appendChild(document.createElement('br')); // Salto de línea después de cada fila
+    }
+}
+
+function sumarMatrices() {
+    const rowsA = parseInt(document.getElementById('rowsA').value);
+    const colsA = parseInt(document.getElementById('colsA').value);
+    const rowsB = parseInt(document.getElementById('rowsB').value);
+    const colsB = parseInt(document.getElementById('colsB').value);
+
+    if (rowsA !== rowsB || colsA !== colsB) {
+        alert('Las matrices deben tener las mismas dimensiones para sumar.');
         return;
     }
 
-    const matriz1 = [];
-    const matriz2 = [];
+    crearInputsMatrix('resultado', rowsA, colsA);
 
-    for (let i = 0; i < filas; i++) {
-        matriz1[i] = [];
-        matriz2[i] = [];
-        for (let j = 0; j < columnas; j++) {
-            matriz1[i][j] = parseFloat(prompt(`Ingrese el valor para la Matriz 1 en la posición (${i + 1}, ${j + 1}):`));
-            matriz2[i][j] = parseFloat(prompt(`Ingrese el valor para la Matriz 2 en la posición (${i + 1}, ${j + 1}):`));
-            if (isNaN(matriz1[i][j]) || isNaN(matriz2[i][j])) {
-                alert('Por favor, ingrese valores numéricos válidos.');
-                return;
-            }
+    const matrizA = obtenerMatriz('matrixA', rowsA, colsA);
+    const matrizB = obtenerMatriz('matrixB', rowsB, colsB);
+
+    const resultado = sumarMatricesInternamente(matrizA, matrizB);
+
+    llenarResultado(resultado);
+}
+
+function obtenerMatriz(id, rows, cols) {
+    let matriz = [];
+    let inputs = document.getElementById(id).getElementsByTagName('input');
+    let index = 0;
+
+    for (let i = 0; i < rows; i++) {
+        matriz[i] = [];
+        for (let j = 0; j < cols; j++) {
+            matriz[i][j] = parseInt(inputs[index].value);
+            index++;
         }
     }
 
-    const response = await fetch('/sumar', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ matriz1, matriz2 })
+    return matriz;
+}
+
+function sumarMatricesInternamente(matrizA, matrizB) {
+    let resultado = [];
+
+    for (let i = 0; i < matrizA.length; i++) {
+        resultado[i] = [];
+        for (let j = 0; j < matrizA[0].length; j++) {
+            resultado[i][j] = matrizA[i][j] + matrizB[i][j];
+        }
+    }
+
+    return resultado;
+}
+
+function llenarResultado(resultado) {
+    let inputs = document.getElementById('resultado').getElementsByTagName('input');
+    let index = 0;
+
+    for (let i = 0; i < resultado.length; i++) {
+        for (let j = 0; j < resultado[0].length; j++) {
+            inputs[index].value = resultado[i][j];
+            index++;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('rowsA').addEventListener('change', function() {
+        const rows = parseInt(this.value);
+        const cols = parseInt(document.getElementById('colsA').value);
+        crearInputsMatrix('matrixA', rows, cols);
     });
 
-    const resultado = await response.json();
+    document.getElementById('colsA').addEventListener('change', function() {
+        const rows = parseInt(document.getElementById('rowsA').value);
+        const cols = parseInt(this.value);
+        crearInputsMatrix('matrixA', rows, cols);
+    });
 
-    document.getElementById('resultado').innerHTML = `<h3>Matriz Resultante:</h3><pre>${JSON.stringify(resultado, null, 2)}</pre>`;
+    document.getElementById('rowsB').addEventListener('change', function() {
+        const rows = parseInt(this.value);
+        const cols = parseInt(document.getElementById('colsB').value);
+        crearInputsMatrix('matrixB', rows, cols);
+    });
+
+    document.getElementById('colsB').addEventListener('change', function() {
+        const rows = parseInt(document.getElementById('rowsB').value);
+        const cols = parseInt(this.value);
+        crearInputsMatrix('matrixB', rows, cols);
+    });
 });
